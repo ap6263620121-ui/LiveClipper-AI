@@ -251,27 +251,131 @@ document.getElementById("videoFile")
 
 });
 
-function generate() {
-
+async function generate() {
   const file = document.getElementById("videoFile").files[0];
   const link = document.getElementById("videoLink").value.trim();
   const status = document.getElementById("status");
 
-  if (!file && !link) {
-    status.textContent = "Please upload a video or paste a YouTube link.";
-    return;
-  }
-
   if (!file) {
-    checkLink();
+    status.textContent = link
+      ? "YouTube processing needs a separate backend."
+      : "Please upload a video first.";
     return;
   }
 
-  status.textContent =
-    "Your clip settings are ready. AI processing and MP4 export will be connected in the next development step.";
+  const duration = Number(
+    document.getElementById("duration").value
+  );
 
+  const video = document.getElementById("preview");
+
+  if (!Number.isFinite(video.duration) || !video.duration) {
+    status.textContent = "Please wait until video loads.";
+    return;
+  }
+
+  const oldButton = document.querySelector(
+    'button[onclick="generate()"]'
+  );
+
+  oldButton.disabled = true;
+
+  let ffmpeg;
+
+  try {
+    status.textContent = "Loading video processing engine...";
+
+    const { FFmpeg } = await import(
+      "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js"
+    );
+
+    const { fetchFile, toBlobURL } = await import(
+      "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.2/dist/esm/index.js"
+    );
+
+    ffmpeg = new FFmpeg();
+
+    const base =
+      "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/";
+
+    const coreURL = await toBlobURL(
+      base + "ffmpeg-core.js",
+      "text/javascript"
+    );
+
+    const wasmURL = await toBlobURL(
+      base + "ffmpeg-core.wasm",
+      "application/wasm"
+    );
+
+    await ffmpeg.load({ coreURL, wasmURL });
+
+    status.textContent = "Preparing your video...";
+
+    await ffmpeg.writeFile("input.mp4", await fetchFile(file));
+
+    const total = Math.ceil(video.duration / duration);
+    const results = [];
+
+    for (let i = 0; i < total; i++) {
+      status.textContent =
+        "Creating clip " + (i + 1) + " of " + total + "...";
+
+      const start = i * duration;
+      const length = Math.min(
+        duration,
+        video.duration - start
+      );
+
+      const output = "clip-" + (i + 1) + ".mp4";
+
+      await ffmpeg.exec([
+        "-ss", String(start),
+        "-i", "input.mp4",
+        "-t", String(length),
+        "-c:v", "libx264",
+        "-preset", "ultrafast",
+        "-crf", "28",
+        "-c:a", "aac",
+        "-movflags", "+faststart",
+        output
+      ]);
+
+      const data = await ffmpeg.readFile(output);
+
+      const blob = new Blob([data], {
+        type: "video/mp4"
+      });
+
+      results.push({
+        name: output,
+        url: URL.createObjectURL(blob)
+      });
+
+      await ffmpeg.deleteFile(output);
+    }
+
+    status.textContent = "Your clips are ready!";
+
+    results.forEach((clip) => {
+      const link = document.createElement("a");
+      link.href = clip.url;
+      link.download = clip.name;
+      link.textContent = "Download " + clip.name;
+      link.style.display = "block";
+      link.style.color = "#65d9ff";
+      link.style.marginTop = "12px";
+      status.appendChild(link);
+    });
+
+    await ffmpeg.deleteFile("input.mp4");
+
+  } catch (error) {
+    console.error(error);
+    status.textContent =
+      "Processing failed. Please try a smaller video or another browser.";
+  } finally {
+    oldButton.disabled = false;
+  }
 }
 
-</script>
-</body>
-</html>
