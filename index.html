@@ -111,3 +111,19 @@ document.getElementById('status').textContent=
 </script>
 </body>
 </html>
+function checkLink(){
+  const link = document.getElementById('videoLink').value.trim();
+  const status = document.getElementById('status');
+
+  if(!link){
+    status.textContent = "Please paste a YouTube link first.";
+    return;
+  }
+
+  if(!link.includes("youtube.com") && !link.includes("youtu.be")){
+    status.textContent = "Please enter a valid YouTube link.";
+    return;
+  }
+
+  status.textContent = "YouTube link received successfully! Video processing will be connected next.";
+}
