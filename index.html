@@ -1,12 +1,113 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LiveClipper AI</title>
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;background:#090817;color:white;
+font-family:Arial,sans-serif;
+padding:20px;
+}
+.container{max-width:600px;margin:auto}
+header{text-align:center;padding:25px 0}
+.logo{font-size:32px;font-weight:bold;color:#b78aff}
+header p{color:#aaa}
+.card{
+background:#17142b;padding:22px;
+border:1px solid #393054;border-radius:18px;
+margin-bottom:18px;
+}
+h2{font-size:20px}
+input{
+width:100%;padding:15px;border-radius:10px;
+border:1px solid #51456f;background:#0d0b1c;
+color:white;margin:12px 0;
+}
+button{
+width:100%;padding:15px;border:0;border-radius:10px;
+background:#873eff;color:white;font-size:16px;
+font-weight:bold;margin-top:12px;
+}
+button:active{opacity:.8}
+.info{display:flex;gap:10px;flex-wrap:wrap}
+.tag{
+background:#30244d;padding:10px 14px;
+border-radius:20px;color:#d9c4ff;font-size:13px
+}
+#status{color:#d5b9ff;margin-top:15px;line-height:1.5}
+video{width:100%;margin-top:15px;border-radius:12px}
+footer{text-align:center;color:#777;font-size:12px;padding:20px}
+</style>
 </head>
 <body>
-<h1>🎬 LiveClipper AI</h1>
-<h2>90 Second Video Clipper</h2>
-<p>Welcome to LiveClipper AI</p>
+<div class="container">
+
+<header>
+<div class="logo">⚡ LiveClipper AI</div>
+<p>90 Second Video Clipper</p>
+<h2>Welcome to LiveClipper AI</h2>
+</header>
+
+<div class="card">
+<h2>🎬 Add Your Video</h2>
+<p>Paste your YouTube video link</p>
+<input id="videoLink" type="url"
+placeholder="https://www.youtube.com/...">
+
+<button onclick="checkLink()">Continue</button>
+
+<p style="text-align:center;color:#aaa">OR</p>
+<p>Upload your own video</p>
+<input id="videoFile" type="file" accept="video/*">
+<video id="preview" controls hidden></video>
+</div>
+
+<div class="card">
+<h2>⚙️ Clip Settings</h2>
+<div class="info">
+<span class="tag">90 Seconds</span>
+<span class="tag">1080p Full HD</span>
+<span class="tag">AI Clipping</span>
+</div>
+<button onclick="generate()">✨ Generate Clips</button>
+<div id="status"></div>
+</div>
+
+<footer>LiveClipper AI • Video Clipping Studio</footer>
+</div>
+
+<script>
+function checkLink(){
+const link=document.getElementById('videoLink').value.trim();
+const status=document.getElementById('status');
+if(!link){
+status.textContent="Please paste a video link first.";
+return;
+}
+if(!/^https?:\/\//i.test(link)){
+status.textContent="Please enter a valid video URL.";
+return;
+}
+status.textContent="Link received. Video processing service will be connected next.";
+}
+
+document.getElementById('videoFile').addEventListener('change',function(){
+const file=this.files[0];
+if(!file)return;
+const preview=document.getElementById('preview');
+preview.src=URL.createObjectURL(file);
+preview.hidden=false;
+document.getElementById('status').textContent="Video loaded successfully!";
+});
+
+function generate(){
+document.getElementById('status').textContent=
+"Your 90-second clipping settings are ready. AI processing and MP4 export will be connected in the next development step.";
+}
+</script>
 </body>
 </html>
